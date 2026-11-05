@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rekenstal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#DCEAF2; --grass:#5E8C4A; --grass-soft:#CFE0C3; --saddle:#8A5A3B; --hay:#E8C468;
+  --ink:#24323A; --muted:#55666E; --rosette:#C8433A; --card:#FFFFFF; --line:#B9CBD5; --key:#F3F7F9;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --sky:#15232A; --grass:#7FB067; --grass-soft:#24382A; --saddle:#C89070; --hay:#D9B652;
+    --ink:#E6EEF2; --muted:#9FB1BA; --rosette:#E0665C; --card:#1E2F37; --line:#34505C; --key:#26404B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --sky:#15232A; --grass:#7FB067; --grass-soft:#24382A; --saddle:#C89070; --hay:#D9B652;
+  --ink:#E6EEF2; --muted:#9FB1BA; --rosette:#E0665C; --card:#1E2F37; --line:#34505C; --key:#26404B;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--sky);color:var(--ink);
+  font-family:"Andika","Verdana",system-ui,sans-serif;font-size:18px;line-height:1.45;
+  -webkit-tap-highlight-color:transparent}
+main{max-width:480px;margin:0 auto;padding:16px 18px 28px}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--saddle);outline-offset:2px}
+
+h1{font-size:2.4rem;line-height:1.1;margin:18px 0 4px;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px}
+.topics{display:grid;gap:12px}
+.topic{display:flex;align-items:center;gap:14px;text-align:left;padding:16px 18px;
+  background:var(--card);border:2px solid var(--line);border-radius:18px;font-size:1.15rem;font-weight:700}
+.topic small{display:block;font-weight:400;font-size:.9rem;color:var(--muted)}
+.topic .ic{font-size:1.7rem;width:2.2rem;text-align:center;flex:none}
+.rosettes{margin:24px 0 8px;padding:14px 18px;border-radius:18px;background:var(--grass-soft)}
+.linkbtn{background:none;border:0;padding:8px 0;color:var(--muted);text-decoration:underline;font-size:1rem}
+
+/* play */
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.bar .count{color:var(--muted)}
+.track{position:relative;height:84px;margin:6px 0 18px;border-bottom:6px solid var(--grass);}
+.fence{position:absolute;bottom:0;width:18px;height:26px;transform:translateX(-50%);transition:opacity .4s}
+.fence.done{opacity:.35}
+.flag{position:absolute;bottom:0;right:-4px;font-size:1.6rem;line-height:1}
+.horse{position:absolute;bottom:2px;transform:translateX(-50%);transition:left .7s ease-in-out;font-size:2.4rem;line-height:1}
+.horse span{display:inline-block;transform:scaleX(-1)}
+.horse.jump span{animation:hop .7s ease-in-out}
+@keyframes hop{0%{transform:scaleX(-1) translateY(0)}45%{transform:scaleX(-1) translateY(-30px) rotate(-8deg)}100%{transform:scaleX(-1) translateY(0)}}
+
+.sum{background:var(--card);border-radius:22px;padding:22px 16px 18px;text-align:center;border:2px solid var(--line)}
+.q{font-size:3rem;font-weight:700;line-height:1.1;white-space:nowrap}
+.ans{display:inline-block;min-width:2.6em;padding:0 .2em;border-bottom:4px solid var(--saddle);color:var(--saddle)}
+.feedback{min-height:1.6em;margin:12px 0 0;font-size:1.1rem;font-weight:700}
+.feedback.good{color:var(--grass)} .feedback.try{color:var(--rosette)}
+.hint{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--grass-soft);text-align:left;font-size:1.02rem}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.pad button{height:64px;border-radius:16px;border:2px solid var(--line);background:var(--key);font-size:1.7rem;font-weight:700}
+.pad button:active{transform:translateY(1px)}
+.pad .ok{background:var(--grass);border-color:var(--grass);color:#fff;font-size:1.25rem}
+.pad .ok.next{background:var(--saddle);border-color:var(--saddle)}
+.quiet{background:none;border:2px solid var(--line);border-radius:12px;padding:6px 14px;font-size:1rem}
+
+/* done */
+.center{text-align:center}
+.big-rosette{font-size:5rem;line-height:1;margin:22px 0 4px}
+.pause{margin:22px 0;padding:18px;border-radius:18px;background:var(--card);border:2px solid var(--line);text-align:left}
+.pause strong{display:block;margin-bottom:4px}
+.primary{display:block;width:100%;padding:16px;border:0;border-radius:16px;background:var(--grass);color:#fff;font-size:1.2rem;font-weight:700;margin-top:10px}
+.primary:disabled{opacity:.5;cursor:default}
+.secondary{display:block;width:100%;padding:14px;border:2px solid var(--line);border-radius:16px;background:var(--card);font-size:1.1rem;font-weight:700;margin-top:10px}
+
+/* parent */
+.panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px 18px;margin:14px 0}
+.panel h2{font-size:1.15rem;margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-width:46px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--key);font-weight:700}
+.chip[aria-pressed="true"]{background:var(--grass);border-color:var(--grass);color:#fff}
+.row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.muted{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.horse{transition:none}.horse.jump span{animation:none}}
+</style>
+</head>
+<body>
+<main>
+
+<section id="home">
+  <h1>Rekenstal 🐎</h1>
+  <p class="sub">Kies wat je wilt oefenen. Elke goede som is een sprong over een hek.</p>
+  <div class="topics">
+    <button class="topic" data-topic="tafels"><span class="ic">✖️</span><span>Tafels<small id="tafelsLabel">tafels 2 t/m 10</small></span></button>
+    <button class="topic" data-topic="delen"><span class="ic">➗</span><span>Delen<small>met de tafels</small></span></button>
+    <button class="topic" data-topic="t100"><span class="ic">➕</span><span>Plus en min tot 100</span></button>
+    <button class="topic" data-topic="t1000"><span class="ic">💯</span><span>Plus en min tot 1000</span></button>
+    <button class="topic" data-topic="mix"><span class="ic">🎲</span><span>Alles door elkaar</span></button>
+  </div>
+  <div class="rosettes" id="rosetteLine"></div>
+  <button class="linkbtn" id="toParent">Voor ouders</button>
+</section>
+
+<section id="play" hidden>
+  <div class="bar">
+    <button class="quiet" id="stop">Stoppen</button>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="track" id="track" aria-hidden="true"></div>
+  <div class="sum">
+    <div class="q"><span id="qText"></span> = <span class="ans" id="ans">&nbsp;</span></div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+    <div class="hint" id="hint" hidden></div>
+  </div>
+  <div class="pad" id="pad">
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <button data-k="del" aria-label="Wissen">⌫</button><button data-k="0">0</button>
+    <button data-k="ok" class="ok" id="okBtn">Klaar</button>
+  </div>
+</section>
+
+<section id="done" class="center" hidden>
+  <div class="big-rosette">🏵️</div>
+  <h1>Ronde klaar!</h1>
+  <p class="sub" id="doneText"></p>
+  <div class="pause">
+    <strong>Eerst even pauze</strong>
+    Sta op, schud je armen los en drink een slokje water.
+  </div>
+  <p id="enough" hidden><strong>Dat was ronde <span id="roundNo"></span> van vandaag.</strong> Je hebt goed gewerkt, morgen weer!</p>
+  <button class="primary" id="again" disabled>Nog een ronde</button>
+  <button class="secondary" id="toHome">Klaar voor nu</button>
+</section>
+
+<section id="parent" hidden>
+  <div class="bar"><button class="quiet" id="parentBack">Terug</button><span></span></div>
+  <h1>Voor ouders</h1>
+  <p class="sub">Instellingen en voortgang worden alleen op dit apparaat bewaard.</p>
+  <div class="panel">
+    <h2>Sommen per ronde</h2>
+    <div class="chips" id="lenChips"></div>
+  </div>
+  <div class="panel">
+    <h2>Welke tafels</h2>
+    <div class="chips" id="tafelChips"></div>
+  </div>
+  <div class="panel">
+    <h2>Tip na een fout antwoord</h2>
+    <div class="chips" id="hintChips"></div>
+  </div>
+  <div class="panel">
+    <h2>Afgelopen 7 dagen</h2>
+    <div id="days"></div>
+  </div>
+  <div class="panel">
+    <h2>Lastigste sommen</h2>
+    <div id="hard"></div>
+  </div>
+  <button class="secondary" id="reset">Alle voortgang wissen</button>
+</section>
+
+</main>
+<script>
+(function(){
+const KEY='rekenstal-v1';
+const DEF={settings:{len:8,tafels:[2,3,4,5,6,7,8,9,10],hints:true},rosettes:0,days:{},wrong:{}};
+let S=load();
+function load(){
+  try{const r=localStorage.getItem(KEY);
+    if(r){const o=JSON.parse(r);return Object.assign({},JSON.parse(JSON.stringify(DEF)),o,{settings:Object.assign({},DEF.settings,o.settings||{})});}
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEF));
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const today=()=>new Date().toLocaleDateString('sv');
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const $=id=>document.getElementById(id);
+
+/* ---------- sommen ---------- */
+function hintMul(t,n){
+  if(n===1) return `1 keer een getal is dat getal zelf.`;
+  if(n===10) return `10 × ${t}: zet een 0 achter de ${t}.`;
+  if(n===5) return `5 × ${t} is de helft van 10 × ${t} = ${10*t}.`;
+  if(n>5) return `Je weet: 5 × ${t} = ${5*t}. Er moeten nog ${n-5} keer ${t} bij.`;
+  return `Je weet: ${n-1} × ${t} = ${(n-1)*t}. Doe er nog ${t} bij.`;
+}
+function genTafel(){
+  const t=pick(S.settings.tafels), n=R(1,10);
+  const [a,b]=Math.random()<.5?[n,t]:[t,n];
+  return {text:`${a} × ${b}`,ans:a*b,key:`${Math.min(a,b)} × ${Math.max(a,b)}`,hint:hintMul(t,n)};
+}
+function genDelen(){
+  const t=pick(S.settings.tafels.filter(x=>x>1).length?S.settings.tafels.filter(x=>x>1):[2]), n=R(1,10), p=t*n;
+  return {text:`${p} : ${t}`,ans:n,key:`${p} : ${t}`,hint:`Hoeveel keer ${t} is ${p}? Zoek het in de tafel van ${t}.`};
+}
+function split(b){
+  const h=Math.floor(b/100)*100, t=Math.floor((b%100)/10)*10, e=b%10;
+  return [h,t,e].filter(x=>x>0);
+}
+function genT100(){
+  if(Math.random()<.5){
+    const a=R(5,88), b=R(3,Math.min(60,100-a));
+    let hint;
+    if(a%10>0 && a%10+b%10>=10){const s=10-a%10;hint=`Eerst naar het tiental: ${a} + ${s} = ${a+s}. Dan nog ${b-s} erbij.`;}
+    else{const p=split(b);hint=p.length>1?`Splits ${b} in ${p.join(' en ')}. Eerst ${a} + ${p[0]} = ${a+p[0]}, dan nog + ${p[1]}.`:`Tel ${b} erbij.`;}
+    return {text:`${a} + ${b}`,ans:a+b,key:`${a} + ${b}`,hint};
+  }
+  const a=R(15,100), b=R(3,Math.min(60,a-2));
+  let hint;
+  if(a%10>0 && b%10>a%10){const s=a%10;hint=`Eerst terug naar het tiental: ${a} − ${s} = ${a-s}. Dan nog ${b-s} eraf.`;}
+  else{const p=split(b);hint=p.length>1?`Splits ${b} in ${p.join(' en ')}. Eerst ${a} − ${p[0]} = ${a-p[0]}, dan nog − ${p[1]}.`:`Haal er ${b} af.`;}
+  return {text:`${a} − ${b}`,ans:a-b,key:`${a} − ${b}`,hint};
+}
+function genT1000(){
+  const type=R(0,2), plus=Math.random()<.5;
+  let a,b;
+  if(type===0){a=R(1,8)*100;b=plus?R(1,10-a/100)*100:R(1,a/100)*100; if(!plus&&b===a)b=a-100||100;}
+  else if(type===1){a=R(11,95)*10;b=R(1,9)*10;if(plus&&a+b>1000)b=1000-a;if(!plus&&b>a)b=a-10;}
+  else{a=R(120,800);b=R(12,180);if(plus&&a+b>1000)b=1000-a;}
+  if(b<=0)b=10;
+  const p=split(b), op=plus?'+':'−', ans=plus?a+b:a-b;
+  const hint=p.length>1?`Splits ${b} in ${p.join(' en ')}. Doe het stap voor stap: eerst ${a} ${op} ${p[0]} = ${plus?a+p[0]:a-p[0]}.`
+    :`Kijk alleen naar de ${p[0]>=100?'honderdtallen':'tientallen'}: dat is net als een kleine som.`;
+  return {text:`${a} ${op} ${b}`,ans,key:`${a} ${op} ${b}`,hint};
+}
+const GEN={tafels:genTafel,delen:genDelen,t100:genT100,t1000:genT1000,mix:()=>pick([genTafel,genDelen,genT100,genT1000])()};
+
+/* ---------- ronde ---------- */
+let topic,queue,idx,cleared,attempts,input,mode,len;
+function newQ(){
+  for(let i=0;i<15;i++){const q=GEN[topic]();if(!queue.slice(-4).some(x=>x.key===q.key))return q;}
+  return GEN[topic]();
+}
+function startRound(t){
+  topic=t;len=S.settings.len;queue=[];cleared=0;idx=0;
+  for(let i=0;i<len;i++)queue.push(newQ());
+  buildTrack();show('play');showQ();
+}
+function buildTrack(){
+  const tr=$('track');tr.innerHTML='';
+  for(let i=0;i<len;i++){
+    const f=document.createElement('div');f.className='fence';f.style.left=((i+1)/(len+1)*100)+'%';
+    f.innerHTML='<svg viewBox="0 0 18 26" width="18" height="26"><rect x="1" y="4" width="3" height="22" fill="var(--saddle)"/><rect x="14" y="4" width="3" height="22" fill="var(--saddle)"/><rect x="0" y="7" width="18" height="4" rx="1" fill="var(--hay)"/><rect x="0" y="15" width="18" height="4" rx="1" fill="var(--rosette)"/></svg>';
+    tr.appendChild(f);
+  }
+  const flag=document.createElement('div');flag.className='flag';flag.textContent='🏁';tr.appendChild(flag);
+  const h=document.createElement('div');h.className='horse';h.id='horse';h.innerHTML='<span>🐎</span>';tr.appendChild(h);
+  moveHorse(false);
+}
+function moveHorse(jump){
+  const h=$('horse');
+  h.style.left=`calc(${(cleared+.5)/(len+1)*100}% )`;
+  if(cleared===0)h.style.left='22px';
+  if(jump){h.classList.remove('jump');void h.offsetWidth;h.classList.add('jump');}
+  document.querySelectorAll('.fence').forEach((f,i)=>f.classList.toggle('done',i<cleared));
+}
+function showQ(){
+  if(idx>=queue.length)queue.push(newQ());
+  const q=queue[idx];attempts=0;input='';mode='answer';
+  $('qText').textContent=q.text;renderAns();
+  $('feedback').textContent='';$('feedback').className='feedback';
+  $('hint').hidden=true;
+  $('okBtn').textContent='Klaar';$('okBtn').classList.remove('next');
+  $('count').textContent=`${cleared} van ${len} hekken`;
+}
+function renderAns(){$('ans').innerHTML=input===''?'&nbsp;':input;}
+const PRAISE=['Goed zo!','Klopt!','Mooie sprong!','Netjes!','Ja, goed!'];
+function check(){
+  if(mode==='reveal'){next();return;}
+  if(mode!=='answer'||input==='')return;
+  const q=queue[idx];
+  if(+input===q.ans){
+    mode='wait';cleared++;
+    $('feedback').textContent=pick(PRAISE);$('feedback').className='feedback good';
+    $('hint').hidden=true;moveHorse(true);
+    $('count').textContent=`${cleared} van ${len} hekken`;
+    setTimeout(next,950);
+    return;
+  }
+  attempts++;
+  if(attempts===1){
+    S.wrong[q.key]=(S.wrong[q.key]||0)+1;save();
+    $('feedback').textContent='Nog niet. Probeer het nog een keer.';$('feedback').className='feedback try';
+    if(S.settings.hints){$('hint').textContent='Tip: '+q.hint;$('hint').hidden=false;}
+    input='';renderAns();
+  }else{
+    mode='reveal';
+    $('feedback').textContent=`Het antwoord is ${q.ans}. Deze som komt zo nog een keer terug.`;
+    $('feedback').className='feedback try';
+    input=String(q.ans);renderAns();
+    queue.splice(Math.min(idx+3,queue.length),0,{...q});
+    $('okBtn').textContent='Verder';$('okBtn').classList.add('next');
+  }
+}
+function next(){
+  if(cleared>=len){finish();return;}
+  idx++;showQ();
+}
+let timer;
+function finish(){
+  const d=today();S.days[d]=(S.days[d]||0)+1;S.rosettes++;save();
+  $('doneText').textContent=`Je paard is over alle ${len} hekken gesprongen. Je hebt nu ${S.rosettes} ${S.rosettes===1?'rozet':'rozetten'}.`;
+  const n=S.days[d];$('roundNo').textContent=n;$('enough').hidden=n<3;
+  const btn=$('again');let s=30;btn.disabled=true;
+  clearInterval(timer);
+  const tick=()=>{btn.textContent=s>0?`Nog een ronde (over ${s} s)`:'Nog een ronde';if(s<=0){btn.disabled=false;clearInterval(timer);}s--;};
+  tick();timer=setInterval(tick,1000);
+  show('done');
+}
+
+/* ---------- invoer ---------- */
+function key(k){
+  if($('play').hidden)return;
+  if(k==='ok'){check();return;}
+  if(mode!=='answer')return;
+  if(k==='del'){input=input.slice(0,-1);}
+  else if(input.length<4){input=(input==='0'?'':input)+k;}
+  renderAns();
+}
+$('pad').addEventListener('click',e=>{const b=e.target.closest('button');if(b)key(b.dataset.k);});
+document.addEventListener('keydown',e=>{
+  if($('play').hidden)return;
+  if(/^[0-9]$/.test(e.key))key(e.key);
+  else if(e.key==='Backspace')key('del');
+  else if(e.key==='Enter'){e.preventDefault();key('ok');}
+});
+
+/* ---------- schermen ---------- */
+function show(id){['home','play','done','parent'].forEach(s=>$(s).hidden=s!==id);window.scrollTo(0,0);if(id==='home')renderHome();if(id==='parent')renderParent();}
+function renderHome(){
+  const t=[...S.settings.tafels].sort((a,b)=>a-b);
+  $('tafelsLabel').textContent=t.length===1?`tafel van ${t[0]}`:`tafels ${t.join(', ')}`;
+  $('rosetteLine').textContent=S.rosettes?`🏵️ Je hebt ${S.rosettes} ${S.rosettes===1?'rozet':'rozetten'} verdiend.`:'🏵️ Na elke ronde krijg je een rozet.';
+}
+document.querySelectorAll('.topic').forEach(b=>b.addEventListener('click',()=>startRound(b.dataset.topic)));
+$('stop').addEventListener('click',()=>show('home'));
+$('again').addEventListener('click',()=>startRound(topic));
+$('toHome').addEventListener('click',()=>{clearInterval(timer);show('home');});
+$('toParent').addEventListener('click',()=>show('parent'));
+$('parentBack').addEventListener('click',()=>show('home'));
+
+function chip(label,on,fn){const b=document.createElement('button');b.className='chip';b.textContent=label;b.setAttribute('aria-pressed',on);b.addEventListener('click',fn);return b;}
+function renderParent(){
+  const lc=$('lenChips');lc.innerHTML='';
+  [5,8,10,12].forEach(n=>lc.appendChild(chip(n,S.settings.len===n,()=>{S.settings.len=n;save();renderParent();})));
+  const tc=$('tafelChips');tc.innerHTML='';
+  for(let n=1;n<=10;n++){const on=S.settings.tafels.includes(n);
+    tc.appendChild(chip(n,on,()=>{
+      if(on&&S.settings.tafels.length===1)return;
+      S.settings.tafels=on?S.settings.tafels.filter(x=>x!==n):[...S.settings.tafels,n];save();renderParent();}));}
+  const hc=$('hintChips');hc.innerHTML='';
+  hc.appendChild(chip('Aan',S.settings.hints,()=>{S.settings.hints=true;save();renderParent();}));
+  hc.appendChild(chip('Uit',!S.settings.hints,()=>{S.settings.hints=false;save();renderParent();}));
+  const dEl=$('days');dEl.innerHTML='';
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toLocaleDateString('sv');
+    const n=S.days[k]||0;const r=document.createElement('div');r.className='row';
+    r.innerHTML=`<span>${d.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'short'})}</span><span class="${n?'':'muted'}">${n?n+(n===1?' ronde':' rondes'):'–'}</span>`;
+    dEl.appendChild(r);}
+  const hEl=$('hard');hEl.innerHTML='';
+  const list=Object.entries(S.wrong).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!list.length){hEl.innerHTML='<p class="muted" style="margin:0">Nog geen fouten bijgehouden. Na een paar rondes zie je hier welke sommen lastig zijn.</p>';}
+  list.forEach(([k,n])=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<span>${k}</span><span class="muted">${n}× fout</span>`;hEl.appendChild(r);});
+}
+$('reset').addEventListener('click',()=>{if(confirm('Alle rozetten, rondes en foutenlijst wissen?')){const s=S.settings;S=JSON.parse(JSON.stringify(DEF));S.settings=s;save();renderParent();}});
+
+renderHome();
+})();
+</script>
+</body>
+</html>
