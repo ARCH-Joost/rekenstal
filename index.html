@@ -10,6 +10,7 @@
 :root{
   --sky:#DCEAF2; --grass:#5E8C4A; --grass-soft:#CFE0C3; --saddle:#8A5A3B; --hay:#E8C468;
   --ink:#24323A; --muted:#55666E; --rosette:#C8433A; --card:#FFFFFF; --line:#B9CBD5; --key:#F3F7F9;
+  --lcd-bg:#22313A; --lcd-fg:#A6E37F;
   color-scheme:light;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
@@ -19,12 +20,14 @@
   :root:not([data-theme="light"]){
     --sky:#15232A; --grass:#7FB067; --grass-soft:#24382A; --saddle:#C89070; --hay:#D9B652;
     --ink:#E6EEF2; --muted:#9FB1BA; --rosette:#E0665C; --card:#1E2F37; --line:#34505C; --key:#26404B;
+    --lcd-bg:#0C161B; --lcd-fg:#A6E37F;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --sky:#15232A; --grass:#7FB067; --grass-soft:#24382A; --saddle:#C89070; --hay:#D9B652;
   --ink:#E6EEF2; --muted:#9FB1BA; --rosette:#E0665C; --card:#1E2F37; --line:#34505C; --key:#26404B;
+  --lcd-bg:#0C161B; --lcd-fg:#A6E37F;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -64,6 +67,13 @@ h1{font-size:2.4rem;line-height:1.1;margin:18px 0 4px;font-weight:700;letter-spa
 .ans{display:inline-block;min-width:2.6em;padding:0 .2em;border-bottom:4px solid var(--saddle);color:var(--saddle)}
 .feedback{min-height:1.6em;margin:12px 0 0;font-size:1.1rem;font-weight:700}
 .feedback.good{color:var(--grass)} .feedback.try{color:var(--rosette)}
+.visual{display:flex;justify-content:center;margin:0 0 4px}
+.visual svg{width:156px;height:156px;display:block}
+.lcd{font-family:ui-monospace,Consolas,"Courier New",monospace;font-size:2.8rem;font-weight:700;letter-spacing:.06em;
+  padding:6px 22px;border-radius:14px;background:var(--lcd-bg);color:var(--lcd-fg);border:3px solid var(--saddle)}
+.words{font-size:1.9rem;font-weight:700;line-height:1.2;color:var(--saddle);margin:8px 0}
+.ask{margin:4px 0 6px;font-size:1.1rem;font-weight:700}
+.typehelp{margin:6px 0 0;font-size:.92rem;color:var(--muted)}
 .hint{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--grass-soft);text-align:left;font-size:1.02rem}
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
 .pad button{height:64px;border-radius:16px;border:2px solid var(--line);background:var(--key);font-size:1.7rem;font-weight:700}
@@ -104,6 +114,7 @@ h1{font-size:2.4rem;line-height:1.1;margin:18px 0 4px;font-weight:700;letter-spa
     <button class="topic" data-topic="delen"><span class="ic">➗</span><span>Delen<small>met de tafels</small></span></button>
     <button class="topic" data-topic="t100"><span class="ic">➕</span><span>Plus en min tot 100</span></button>
     <button class="topic" data-topic="t1000"><span class="ic">💯</span><span>Plus en min tot 1000</span></button>
+    <button class="topic" data-topic="klok"><span class="ic">🕒</span><span>Klokkijken<small>analoog en digitaal</small></span></button>
     <button class="topic" data-topic="mix"><span class="ic">🎲</span><span>Alles door elkaar</span></button>
   </div>
   <div class="rosettes" id="rosetteLine"></div>
@@ -117,7 +128,10 @@ h1{font-size:2.4rem;line-height:1.1;margin:18px 0 4px;font-weight:700;letter-spa
   </div>
   <div class="track" id="track" aria-hidden="true"></div>
   <div class="sum">
-    <div class="q"><span id="qText"></span> = <span class="ans" id="ans">&nbsp;</span></div>
+    <div class="visual" id="visual" hidden></div>
+    <p class="ask" id="ask" hidden></p>
+    <div class="q"><span id="qPre"><span id="qText"></span> = </span><span class="ans" id="ans">&nbsp;</span></div>
+    <p class="typehelp" id="typeHelp" hidden>Typ de tijd zonder dubbele punt: 7 3 0 wordt 7:30.</p>
     <p class="feedback" id="feedback" aria-live="polite"></p>
     <div class="hint" id="hint" hidden></div>
   </div>
@@ -156,6 +170,10 @@ h1{font-size:2.4rem;line-height:1.1;margin:18px 0 4px;font-weight:700;letter-spa
     <div class="chips" id="tafelChips"></div>
   </div>
   <div class="panel">
+    <h2>Klokkijken</h2>
+    <div class="chips" id="klokChips"></div>
+  </div>
+  <div class="panel">
     <h2>Tip na een fout antwoord</h2>
     <div class="chips" id="hintChips"></div>
   </div>
@@ -174,7 +192,7 @@ h1{font-size:2.4rem;line-height:1.1;margin:18px 0 4px;font-weight:700;letter-spa
 <script>
 (function(){
 const KEY='rekenstal-v1';
-const DEF={settings:{len:8,tafels:[2,3,4,5,6,7,8,9,10],hints:true},rosettes:0,days:{},wrong:{}};
+const DEF={settings:{len:8,tafels:[2,3,4,5,6,7,8,9,10],hints:true,klok:5},rosettes:0,days:{},wrong:{}};
 let S=load();
 function load(){
   try{const r=localStorage.getItem(KEY);
@@ -235,7 +253,69 @@ function genT1000(){
     :`Kijk alleen naar de ${p[0]>=100?'honderdtallen':'tientallen'}: dat is net als een kleine som.`;
   return {text:`${a} ${op} ${b}`,ans,key:`${a} ${op} ${b}`,hint};
 }
-const GEN={tafels:genTafel,delen:genDelen,t100:genT100,t1000:genT1000,mix:()=>pick([genTafel,genDelen,genT100,genT1000])()};
+/* ---------- klok ---------- */
+const NUM=['twaalf','één','twee','drie','vier','vijf','zes','zeven','acht','negen','tien','elf','twaalf'];
+const pad2=n=>String(n).padStart(2,'0');
+function pickTime(){
+  const step=[5,15,30].includes(S.settings.klok)?S.settings.klok:5;
+  const m=(step===5&&Math.random()<.5)?pick([0,15,30,45]):R(0,60/step-1)*step;
+  return {h:R(1,12),m};
+}
+function clockSVG(h,m){
+  const ha=((h%12)+m/60)*30, ma=m*6, P=(r,deg)=>{const a=deg*Math.PI/180;return [(100+r*Math.sin(a)).toFixed(1),(100-r*Math.cos(a)).toFixed(1)];};
+  let s='<svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" fill="var(--card)" stroke="var(--saddle)" stroke-width="6"/>';
+  for(let i=0;i<60;i++){const big=i%5===0,[x1,y1]=P(big?80:85,i*6),[x2,y2]=P(89,i*6);
+    s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--muted)" stroke-width="${big?3:1.2}"/>`;}
+  for(let n=1;n<=12;n++){const [x,y]=P(66,n*30);
+    s+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="20" font-weight="700" fill="var(--ink)">${n}</text>`;}
+  s+=`<line x1="100" y1="100" x2="100" y2="56" stroke="var(--ink)" stroke-width="8" stroke-linecap="round" transform="rotate(${ha} 100 100)"/>`;
+  s+=`<line x1="100" y1="100" x2="100" y2="26" stroke="var(--rosette)" stroke-width="4.5" stroke-linecap="round" transform="rotate(${ma} 100 100)"/>`;
+  return s+'<circle cx="100" cy="100" r="6" fill="var(--ink)"/></svg>';
+}
+function dutchTime(h,m){
+  const H=NUM[h], N=NUM[h%12+1];
+  return {0:`${H} uur`,5:`vijf over ${H}`,10:`tien over ${H}`,15:`kwart over ${H}`,20:`tien voor half ${N}`,25:`vijf voor half ${N}`,
+    30:`half ${N}`,35:`vijf over half ${N}`,40:`tien over half ${N}`,45:`kwart voor ${N}`,50:`tien voor ${N}`,55:`vijf voor ${N}`}[m];
+}
+function analogHint(h,m){
+  const n=h%12+1;
+  if(m===0) return `De lange wijzer staat bij de 12: dat is een heel uur, dus :00. Kijk dan waar de korte wijzer staat.`;
+  return `De korte wijzer staat tussen de ${h} en de ${n}: dan is het nog ${h} uur en een beetje. `+
+    `De lange wijzer staat bij de ${m/5}. Elk cijfer is 5 minuten.`;
+}
+function wordsHint(h,m){
+  const n=h%12+1;
+  if(m===0) return `Een heel uur: de minuten zijn 00.`;
+  if(m<15) return `"Over ${NUM[h]}" betekent: een paar minuten na ${h} uur.`;
+  if(m===15) return `Een kwartier is 15 minuten. "Kwart over" betekent: 15 minuten na het hele uur.`;
+  if(m<30) return `Half ${NUM[n]} betekent: nog een half uur tot ${n} uur, dus ${h}:30. Ga daarvan ${30-m} minuten terug.`;
+  if(m===30) return `Half ${NUM[n]} betekent: nog een half uur tot ${n} uur. Het is dus nog geen ${n} uur!`;
+  if(m<45) return `Half ${NUM[n]} is een half uur vóór ${n} uur, dus ${h}:30. Daar komen nog ${m-30} minuten bij.`;
+  if(m===45) return `Kwart voor ${NUM[n]} is 15 minuten vóór ${n} uur. Het is dus nog geen ${n} uur.`;
+  return `Het is nog ${60-m} minuten tot ${n} uur. Het is dus nog geen ${n} uur.`;
+}
+function clockQ(o){return Object.assign(o,{time:true,text:o.ask,ansText:`${o.h}:${pad2(o.m)}`,ansInput:`${o.h}${pad2(o.m)}`});}
+function genKlok(){
+  const {h,m}=pickTime(), t=R(0,2);
+  if(t===0) return clockQ({visual:clockSVG(h,m),ask:'Hoe laat is het op de klok?',h,m,any:true,
+    key:`🕒 ${h}:${pad2(m)}`,hint:analogHint(h,m)});
+  if(t===1) return clockQ({visual:`<div class="words">${dutchTime(h,m)}</div>`,ask:'Hoe zet je dit op een digitale klok?',h,m,any:true,
+    key:dutchTime(h,m),hint:wordsHint(h,m)});
+  const H=R(13,23);
+  return clockQ({visual:`<div class="lcd">${H}:${pad2(m)}</div>`,ask:'Hoe laat is dat op de wijzerklok?',h:H-12,m,any:false,
+    key:`${H}:${pad2(m)} → wijzerklok`,
+    hint:`Na 12 uur 's middags begint de wijzerklok weer bij 1. Haal 12 van de uren af: ${H} − 12. De minuten blijven hetzelfde.`});
+}
+function timeRight(q,inp){
+  const h=+inp.slice(0,-2), m=+inp.slice(-2);
+  if(m!==q.m) return false;
+  return q.any?h%12===q.h%12:h===q.h;
+}
+/* 2-9 als eerste cijfer: het uur is één cijfer, dus de dubbele punt kan er meteen achter */
+const fmtTime=inp=>inp.length>=3?inp.slice(0,-2)+':'+inp.slice(-2):(inp>='2'?inp[0]+':'+inp.slice(1):inp);
+const timeMax=inp=>inp>='2'?3:4;
+
+const GEN={tafels:genTafel,delen:genDelen,t100:genT100,t1000:genT1000,klok:genKlok,mix:()=>pick([genTafel,genDelen,genT100,genT1000])()};
 
 /* ---------- ronde ---------- */
 let topic,queue,idx,cleared,attempts,input,mode,len;
@@ -269,19 +349,30 @@ function moveHorse(jump){
 function showQ(){
   if(idx>=queue.length)queue.push(newQ());
   const q=queue[idx];attempts=0;input='';mode='answer';
-  $('qText').textContent=q.text;renderAns();
+  const vis=$('visual');
+  if(q.time){vis.innerHTML=q.visual;$('ask').textContent=q.ask;$('qText').textContent='';}
+  else{vis.innerHTML='';$('qText').textContent=q.text;}
+  vis.hidden=$('ask').hidden=$('typeHelp').hidden=!q.time;$('qPre').hidden=!!q.time;
+  renderAns();
   $('feedback').textContent='';$('feedback').className='feedback';
   $('hint').hidden=true;
   $('okBtn').textContent='Klaar';$('okBtn').classList.remove('next');
   $('count').textContent=`${cleared} van ${len} hekken`;
 }
-function renderAns(){$('ans').innerHTML=input===''?'&nbsp;':input;}
+function renderAns(){
+  const q=queue&&queue[idx], v=q&&q.time?fmtTime(input):input;
+  $('ans').textContent=v===''?' ':v;
+}
 const PRAISE=['Goed zo!','Klopt!','Mooie sprong!','Netjes!','Ja, goed!'];
 function check(){
   if(mode==='reveal'){next();return;}
   if(mode!=='answer'||input==='')return;
   const q=queue[idx];
-  if(+input===q.ans){
+  if(q.time&&input.length<3){
+    $('feedback').textContent='Typ ook de minuten: 8 0 0 is 8:00.';$('feedback').className='feedback';
+    return;
+  }
+  if(q.time?timeRight(q,input):+input===q.ans){
     mode='wait';cleared++;
     $('feedback').textContent=pick(PRAISE);$('feedback').className='feedback good';
     $('hint').hidden=true;moveHorse(true);
@@ -297,9 +388,9 @@ function check(){
     input='';renderAns();
   }else{
     mode='reveal';
-    $('feedback').textContent=`Het antwoord is ${q.ans}. Deze som komt zo nog een keer terug.`;
+    $('feedback').textContent=`Het antwoord is ${q.time?q.ansText:q.ans}. Deze ${q.time?'vraag':'som'} komt zo nog een keer terug.`;
     $('feedback').className='feedback try';
-    input=String(q.ans);renderAns();
+    input=q.time?q.ansInput:String(q.ans);renderAns();
     queue.splice(Math.min(idx+3,queue.length),0,{...q});
     $('okBtn').textContent='Verder';$('okBtn').classList.add('next');
   }
@@ -326,7 +417,7 @@ function key(k){
   if(k==='ok'){check();return;}
   if(mode!=='answer')return;
   if(k==='del'){input=input.slice(0,-1);}
-  else if(input.length<4){input=(input==='0'?'':input)+k;}
+  else if(input.length<(queue[idx].time?timeMax(input):4)){input=(input==='0'?'':input)+k;}
   renderAns();
 }
 $('pad').addEventListener('click',e=>{const b=e.target.closest('button');if(b)key(b.dataset.k);});
@@ -360,6 +451,9 @@ function renderParent(){
     tc.appendChild(chip(n,on,()=>{
       if(on&&S.settings.tafels.length===1)return;
       S.settings.tafels=on?S.settings.tafels.filter(x=>x!==n):[...S.settings.tafels,n];save();renderParent();}));}
+  const kc=$('klokChips');kc.innerHTML='';
+  [[30,'Hele en halve uren'],[15,'Kwartieren'],[5,'Per 5 minuten']].forEach(([n,l])=>
+    kc.appendChild(chip(l,S.settings.klok===n,()=>{S.settings.klok=n;save();renderParent();})));
   const hc=$('hintChips');hc.innerHTML='';
   hc.appendChild(chip('Aan',S.settings.hints,()=>{S.settings.hints=true;save();renderParent();}));
   hc.appendChild(chip('Uit',!S.settings.hints,()=>{S.settings.hints=false;save();renderParent();}));

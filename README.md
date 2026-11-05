@@ -9,7 +9,10 @@ over een hek.
 
 - Tafels (instelbaar welke), delen met de tafels
 - Plus en min tot 100 en tot 1000
-- Alles door elkaar
+- Klokkijken: een wijzerklok aflezen, tijd in woorden ("vijf over half acht")
+  omzetten naar digitaal, en een 24-uurstijd (14:45) omzetten naar de
+  wijzerklok. Instelbaar: hele en halve uren, kwartieren of per 5 minuten.
+- Alles door elkaar (de rekenonderwerpen, zonder klokkijken)
 - Een ouderscherm met instellingen, rondes van de afgelopen 7 dagen en de
   lastigste sommen
 
