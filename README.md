@@ -16,6 +16,31 @@ over een hek.
 - Een ouderscherm met instellingen, rondes van de afgelopen 7 dagen en de
   lastigste sommen
 
+## Tip en uitleg bij een fout
+
+Elke som krijgt één passende aanpak, zodat ze niet tussen methodes hoeft te
+wisselen:
+
+| Som | Aanpak |
+|---|---|
+| plus/min, getal eindigt op 8 of 9 (47 + 29) | compenseren: 47 + 30 − 1 |
+| min, getallen dicht bij elkaar (83 − 78) | aanvullen: spring van 78 naar 83 |
+| plus zonder tientaloverschrijding (43 + 25) | splitsen: tientallen en eenheden apart |
+| overige plus/min | rijgen, via het tiental of honderdtal |
+| ronde honderdtallen (300 + 400) | rekenen met honderdtallen: 3 + 4 |
+| tafels | wisselen, verdubbelen, halveren (5× = helft van 10×), steunsom (7× = 5× + 2×) |
+| delen | omkeren naar een keersom, met een steunsom |
+| klok | wijzers aflezen, woorden naar cijfers, min 12 |
+
+- **Na de 1e fout:** een tip met de naam van de aanpak en de eerste stap, en
+  waar het kan een getallenlijn met de sprongen en een **?** op de plek van
+  het antwoord.
+- **Na de 2e fout:** het antwoord met de volledige uitwerking in stappen en
+  de complete getallenlijn. De cijfertoetsen verdwijnen dan even, zodat
+  alleen **Verder** overblijft.
+
+In het ouderscherm kun je tip en uitleg samen uitzetten.
+
 ## Ontwerpprincipes
 
 Deze zijn bewust gekozen (voor concentratie). Niet aan tornen zonder overleg:
